@@ -38,4 +38,4 @@
 - "ground"
 - "fixed"
 
-- Also, to mimic vanilla's behavior of tridents and spyglasses, they override "gui", "ground", and "fixed".
+Also, to mimic vanilla's behavior of tridents and spyglasses, they override "gui", "ground", and "fixed".
