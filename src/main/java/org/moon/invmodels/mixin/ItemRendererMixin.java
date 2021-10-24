@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
@@ -29,9 +30,10 @@ import static org.moon.invmodels.InvModelsMod.*;
 public class ItemRendererMixin {
 	@Shadow @Final private ItemModels models;
 
-	private ItemStack stack;
+	@Unique private ItemStack stack;
 	@Unique private ModelTransformation.Mode renderMode;
 	@Unique	private boolean disableLighting;
+	@Unique	private boolean ignoreBuiltin;
 
 	@Inject(
 			at = @At(
@@ -64,6 +66,7 @@ public class ItemRendererMixin {
 					BakedModel newModel = modelManager.reallyGetModel(renderData.get().id());
 					if (newModel != null) {
 						if (renderData.get().disableLighting()) disableLighting = true;
+						if (renderData.get().ignoreBuiltin()) ignoreBuiltin = true;
 						return newModel;
 					}
 				}
@@ -71,6 +74,18 @@ public class ItemRendererMixin {
 		} catch (RuntimeException ignored) {}
 
 		return model;
+	}
+
+	@Redirect(
+			at = @At(value = "INVOKE",
+					target = "Lnet/minecraft/client/render/model/BakedModel;isBuiltin()Z"),
+			method = "renderItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformation$Mode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/client/render/model/BakedModel;)V")
+	private boolean renderItemModel(BakedModel instance) {
+		if (ignoreBuiltin) {
+			ignoreBuiltin = false;
+			return false;
+		}
+		return instance.isBuiltin();
 	}
 
 	@Inject(

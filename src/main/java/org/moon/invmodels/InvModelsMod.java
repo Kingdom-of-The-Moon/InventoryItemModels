@@ -28,7 +28,7 @@ public class InvModelsMod implements ClientModInitializer {
 	public static final HashMap<Identifier, HashMap<ModelTransformation.Mode, ExtraRenderData>> INVENTORY_MODELS = new HashMap<>();
 	public static boolean bakedModelManagerReload;
 
-	public record ExtraRenderData(Identifier id, boolean disableLighting) {}
+	public record ExtraRenderData(Identifier id, boolean disableLighting, boolean ignoreBuiltin) {}
 
 	@Override
 	public void onInitializeClient() {
@@ -66,17 +66,21 @@ public class InvModelsMod implements ClientModInitializer {
 				JsonElement modeData = metadata.get(memberName);
 				Identifier modelId;
 				boolean disableLighting = false;
+				boolean ignoreBuiltin = false;
 				if (modeData.isJsonObject()) {
 					JsonObject entry = modeData.getAsJsonObject();
 					modelId = new Identifier(entry.get("id").getAsString());
 					if (entry.has("disable_lighting")) {
 						disableLighting = entry.get("disable_lighting").getAsBoolean();
 					}
+					if (entry.has("ignore_builtin")) {
+						ignoreBuiltin = entry.get("ignore_builtin").getAsBoolean();
+					}
 				} else {
 					modelId = new Identifier(modeData.getAsString());
 				}
 
-				makeCustomization(originalModel, disableLighting, mode, modelId);
+				makeCustomization(originalModel, disableLighting, ignoreBuiltin, mode, modelId);
 				extraModels.accept(modelId);
 			}
 
@@ -97,9 +101,9 @@ public class InvModelsMod implements ClientModInitializer {
 		return Optional.empty();
 	}
 
-	public static void makeCustomization(Identifier originalModel, boolean disableLighting, ModelTransformation.Mode mode, Identifier newModel) {
+	public static void makeCustomization(Identifier originalModel, boolean disableLighting, boolean ignoreBuiltin, ModelTransformation.Mode mode, Identifier newModel) {
 		INVENTORY_MODELS.putIfAbsent(originalModel, new HashMap<>());
 		HashMap<ModelTransformation.Mode, ExtraRenderData> modelMap = INVENTORY_MODELS.get(originalModel);
-		modelMap.put(mode, new ExtraRenderData(newModel, disableLighting));
+		modelMap.put(mode, new ExtraRenderData(newModel, disableLighting, ignoreBuiltin));
 	}
 }
