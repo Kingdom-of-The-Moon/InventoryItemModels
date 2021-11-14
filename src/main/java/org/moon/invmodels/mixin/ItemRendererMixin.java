@@ -76,6 +76,23 @@ public class ItemRendererMixin {
 		return model;
 	}
 
+	@ModifyVariable(
+			at = @At(
+					value = "INVOKE",
+					shift = At.Shift.AFTER,
+					target = "Lnet/minecraft/client/render/model/BakedModel;getTransformation()Lnet/minecraft/client/render/model/json/ModelTransformation;"
+			),
+			ordinal = 1,
+			method = "renderItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformation$Mode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/client/render/model/BakedModel;)V"
+	)
+	private boolean modifyBl(boolean bl) {
+		if (ignoreBuiltin) {
+			ignoreBuiltin = false;
+			return true;
+		}
+		return bl;
+	}
+
 	@Redirect(
 			at = @At(value = "INVOKE",
 					target = "Lnet/minecraft/client/render/model/BakedModel;isBuiltin()Z"),
