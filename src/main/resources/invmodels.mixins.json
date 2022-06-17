@@ -5,11 +5,7 @@
   "compatibilityLevel": "JAVA_16",
   "client": [
     "ItemRendererMixin",
-    "BakedModelManagerMixin",
-    "TridentEntityAccessMixin",
-    "TridentEntityRendererMixin",
-
-    "ClientPlayerInteractionManagerMixin"
+    "BakedModelManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

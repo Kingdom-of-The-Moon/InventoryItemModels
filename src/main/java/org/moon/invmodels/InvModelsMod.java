@@ -22,16 +22,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class InvModelsMod implements ClientModInitializer {
 	public static final Logger LOGGER = LogManager.getLogger("invmodels");
-	public static final Predicate<String> filePredicate = str -> str.endsWith(".json");
+	public static final Predicate<Identifier> filePredicate = id -> id.getPath().endsWith(".json");
 	public static final HashMap<Identifier, HashMap<ModelTransformation.Mode, ExtraRenderData>> INVENTORY_MODELS = new HashMap<>();
 	public static boolean bakedModelManagerReload;
 
@@ -48,16 +45,17 @@ public class InvModelsMod implements ClientModInitializer {
 		INVENTORY_MODELS.clear();
 		bakedModelManagerReload = true;
 		return (manager, out) -> {
-			Collection<Identifier> extraModels = manager.findResources("invmodels", filePredicate);
-			extraModels.forEach(identifier -> {
+			Map<Identifier, Resource> extraModels = manager.findResources("invmodels", filePredicate);
+			extraModels.forEach((identifier, resource) -> {
 				String path = identifier.getPath();
 				path = path.substring("invmodels/".length(), path.length()-".json".length());
 				Identifier originalModel = new Identifier(identifier.getNamespace(), path);
 				try {
-					Resource metadataResource = manager.getResource(identifier);
-					String rawJson = new String(metadataResource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-					loadMetadata(originalModel, parser.parse(rawJson).getAsJsonObject(), out);
-
+					Optional<Resource> metadataResource = manager.getResource(identifier);
+					if (metadataResource.isPresent()) {
+						String rawJson = new String(metadataResource.get().getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+						loadMetadata(originalModel, parser.parse(rawJson).getAsJsonObject(), out);
+					}
 				} catch (IOException e) {
 					LOGGER.error("Failed to load model metadata for " + identifier);
 					e.printStackTrace();
